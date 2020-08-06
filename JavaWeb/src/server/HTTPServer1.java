@@ -1,10 +1,17 @@
+package server;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
 
-public class HTTPServer {
+public class HTTPServer1 {
+    //存放Servlet实例的缓存
+    private static Map<String, Servlet> servletCache = new HashMap<String, Servlet>();
+
     public static void main(String args[]) {
         int port;
         ServerSocket serverSocket;
@@ -27,7 +34,9 @@ public class HTTPServer {
         }
     }
 
+    /*响应客户的HTTP请求*/
     public static void service(Socket socket) throws Exception {
+        /*读取HTTP请求信息*/
         InputStream socketIn = socket.getInputStream();
         Thread.sleep(500);
         int size = socketIn.available();
@@ -48,10 +57,33 @@ public class HTTPServer {
         if (parts.length>=2) {
             uri = parts[1];
         }
+        /*如果请求访问Servlet，则动态调用Servlet对象的Service方法*/
+        if (uri.contains("servlet")) {
+            String servletName = null;
+            if (uri.contains("?")) {
+                servletName = uri.substring(uri.indexOf("servlet/")+8,uri.indexOf("?"));
+            } else {
+                servletName = uri.substring(uri.indexOf("servlet/")+8,uri.length());
+            }
+            //长沙市从Servlet缓存中获取Servlet对象
+            Servlet servlet = servletCache.get(servletName);
+            if (servlet == null) {
+                servlet = (Servlet) Class.forName("server."+servletName).getDeclaredConstructor().newInstance();
+                servlet.inint();
+                servletCache.put(servletName,servlet);
+            }
+
+            //调用Servlet的Service()方法
+            servlet.service(buffer,socket.getOutputStream());
+
+            Thread.sleep(1000);
+            socket.close();
+            return;
+        }
         /*决定HTTP响应正文的类型，此处做了简化处理*/
         String contentType;
         if (uri.indexOf("html")!=-1 || uri.indexOf("htm") != -1) {
-            contentType = "text/heml";
+            contentType = "text/html";
         } else if (uri.indexOf("jpg")!=-1 || uri.indexOf("jpeg") != -1) {
             contentType = "image/jpeg";
         } else if (uri.indexOf("gif")!=-1) {
@@ -66,7 +98,8 @@ public class HTTPServer {
         //HTTP响应头
         String responseHeader = "Content-Type:"+contentType+"\r\n\r\n";
         //获得读取响应正文数据的输入流
-        InputStream in = HTTPServer.class.getResourceAsStream("root/"+uri);
+        //InputStream inTest = new FileInputStream(new File("F:/test/"+uri));
+        InputStream in = HTTPServer.class.getResourceAsStream(uri);
         /*发送HTTP响应结果*/
         OutputStream socketOut = socket.getOutputStream();
         //发送Http响应的第一行
@@ -76,7 +109,7 @@ public class HTTPServer {
         //发送HTTP响应的正文
         int len = 0;
         buffer = new byte[128];
-        while ((len = in.read(buffer)) != 1) {
+        while ((len = in.read(buffer)) != -1) {
             socketOut.write(buffer,0,len);
         }
 
