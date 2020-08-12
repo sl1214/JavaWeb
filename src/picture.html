@@ -1,0 +1,18 @@
+<html>
+<body>
+<img id="myImage" onclick="changeImage() " src="xiong.gif">
+<p>点击图片即可切换图片</p>
+<script>
+function changeImage(){
+//定义一个image变量来引用id为“myImage”的元素
+var image = document.getElementById ( 'myImage' );
+//切换待显示的图片文件
+if(image.src.match ("xiong.gif")){
+image.src = "xiong2.gif" ;
+}else {
+image.src = "xiong.gif" ;
+}
+}
+</script>
+</body>
+</html>
