@@ -65,11 +65,11 @@ public class HTTPServer1 {
             } else {
                 servletName = uri.substring(uri.indexOf("servlet/")+8,uri.length());
             }
-            //长沙市从Servlet缓存中获取Servlet对象
+            //从Servlet缓存中获取Servlet对象
             Servlet servlet = servletCache.get(servletName);
             if (servlet == null) {
                 servlet = (Servlet) Class.forName("server."+servletName).getDeclaredConstructor().newInstance();
-                servlet.inint();
+                servlet.init();
                 servletCache.put(servletName,servlet);
             }
 

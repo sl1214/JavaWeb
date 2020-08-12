@@ -4,7 +4,7 @@ import java.io.OutputStream;
 
 public class HelloServlet implements Servlet {
     @Override
-    public void inint() throws Exception {
+    public void init() throws Exception {
         System.out.println("HelloServlet is inited");
     }
 
